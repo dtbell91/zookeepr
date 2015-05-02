@@ -10,9 +10,9 @@ A cron job can will then be configured to maintain the Zookeepr code up to the c
 
 # Dependencies
 Zookeepr has the following dependencies, here formatted into a friendly apt-get command
-    ```
-    sudo apt-get install apache2 libapache2-mod-python libapache2-mod-wsgi libpq-dev libpython-dev libxslt1-dev libxml2-dev postgresql git python-virtualenv
-    ```
+```
+sudo apt-get install apache2 libapache2-mod-python libapache2-mod-wsgi libpq-dev libpython-dev libxslt1-dev libxml2-dev postgresql git python-virtualenv
+```
 
 You should now have all of the required dependencies to run a Zookeepr instance successfully.
 
@@ -22,30 +22,41 @@ You should now have all of the required dependencies to run a Zookeepr instance 
     sudo adduser --disabled-password zookeepr
     ```
 
-2. Login to the zookeepr user and pull down the git repo and prepare the environment
-    ```
-    sudo -u zookeepr -i
-    git clone https://github.com/zookeepr/zookeepr.git
-    cd zookeepr/
-    virtualenv env --no-site-packages
-    . ./env/bin/activate
-    ```
-
-3. Create the database (*please change the password to something suitably random in the below commands*)
+2. Create the database (*please change the password to something suitably random in the below commands*)
     ```
     sudo -u postgres createuser --no-createdb --no-createrole --no-superuser zookeepr
     sudo -u postgres createdb -O zookeepr zk
     sudo -u postgres psql --command "ALTER USER zookeepr with PASSWORD 'zookeepr'"
     ```
 
-4. Prepare the config files
+3. Login to the zookeepr user and pull down the git repo and prepare the environment
+The following commands should be run in the directory where it is desired to run Zookeepr from (for example: /home/zookeepr/zookeepr or /var/www/zookeepr)
     ```
-    cp zkpylons/config/lca_info.py.sample zkpylons/config/lca_info.py
-    cp development.ini.sample development.ini
-    mkdir wsgi
-    echo "from pyramid.paster import get_app
-    application = get_app(
-      '/home/zookeepr/zookeepr/development.ini', 'main')" > ./wsgi/zookeepr.wsgi
+    sudo -u zookeepr -i
+    git clone https://github.com/zookeepr/zookeepr.git
+    cd zookeepr/
+    virtualenv env --no-site-packages
+    . ./env/bin/activate
+    exit
     ```
 
-5. 
+4. Prepare the config files
+The following command should be run in the directory where it is desired to store the Zookeepr config files (for example: /home/zookeepr/config)
+    ```
+    sudo -u zookeepr
+    mkdir /home/zookeepr/config
+    ch /home/zookeepr/config
+    git clone $_some_secret_repo
+    ln -s /home/zookeepr/config/lca_info.py /home/zookeepr/zookeepr/zkpylons/config/lca_info.py
+    ln -s /home/zookeepr/config/development.ini /home/zookeepr/zookeepr/development.ini
+    ```
+
+5. Prepare Zookeepr to run
+    ```
+    sudo -u zookeepr
+    python setup.py develop
+    git cherry-pick 7631b73ea4c6df7d219ba1758a72ea779664e8b6
+    alembic --config development.ini upgrade head
+    git reset --hard HEAD^
+    ```
+
