@@ -1,5 +1,12 @@
 # Zookeepr Deployment Instructions
-This document details how to deploy a Zookeepr instance.
+This document details how to deploy a Zookeepr instance with automated deployment from Github.
+
+# Prerequisites
+In order to continuously deploy Zookeepr, two separate Git repositories are required:
+ - A public repo (eg. zookeepr/zookeepr); and
+ - A private report (for storing the secret config files)
+
+A cron job can will then be configured to maintain the Zookeepr code up to the currently desired commit by tags (eg. lca2016-prod or lca2016-uat), likewise for configuration from the private repo.
 
 # Dependencies
 Zookeepr has the following dependencies, here formatted into a friendly apt-get command
