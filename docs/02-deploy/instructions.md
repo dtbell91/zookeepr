@@ -3,60 +3,25 @@ This document details how to deploy a Zookeepr instance with automated deploymen
 
 # Prerequisites
 In order to continuously deploy Zookeepr, two separate Git repositories are required:
- - A public repo (eg. zookeepr/zookeepr); and
+ - A public repo (e.g. zookeepr/zookeepr); and
  - A private report (for storing the secret config files)
 
-A cron job can will then be configured to maintain the Zookeepr code up to the currently desired commit by tags (eg. lca2016-prod or lca2016-uat), likewise for configuration from the private repo.
+A cron job can then be configured to maintain the Zookeepr code up to the currently desired commit by tags (eg. lca2016-prod or lca2016-uat), likewise for configuration from the private repo.
 
-# Dependencies
-Zookeepr has the following dependencies, here formatted into a friendly apt-get command
+You should also have a user which admins can sudo into to own your instance's files (e.g. zkconf-zookeepr-prod or zkconf-zookeepr-uat)
+
+# Suggested Folder Structure
+This is the suggested folder structure for Zookeepr. Using this standard layout will help keep things consistent across multiple Zookeepr instances (e.g. simultaneous conferences) on the same host.
+
+Replace "zookeepr.conf.au" with the domain for your website.
+
 ```
-sudo apt-get install apache2 libapache2-mod-python libapache2-mod-wsgi libpq-dev libpython-dev libxslt1-dev libxml2-dev postgresql git python-virtualenv
+/srv/http/zookeepr.conf.au/log
+/srv/http/zookeepr.conf.au/zookeepr
+/srv/http/zookeepr.conf.au/zookeepr-config
 ```
 
-You should now have all of the required dependencies to run a Zookeepr instance successfully.
-
-# The Steps
-1. Create the zookeepr system account
-    ```
-    sudo adduser --disabled-password zookeepr
-    ```
-
-2. Create the database (*please change the password to something suitably random in the below commands*)
-    ```
-    sudo -u postgres createuser --no-createdb --no-createrole --no-superuser zookeepr
-    sudo -u postgres createdb -O zookeepr zk
-    sudo -u postgres psql --command "ALTER USER zookeepr with PASSWORD 'zookeepr'"
-    ```
-
-3. Login to the zookeepr user and pull down the git repo and prepare the environment
-The following commands should be run in the directory where it is desired to run Zookeepr from (for example: /home/zookeepr/zookeepr or /var/www/zookeepr)
-    ```
-    sudo -u zookeepr -i
-    git clone https://github.com/zookeepr/zookeepr.git
-    cd zookeepr/
-    virtualenv env --no-site-packages
-    . ./env/bin/activate
-    exit
-    ```
-
-4. Prepare the config files
-The following command should be run in the directory where it is desired to store the Zookeepr config files (for example: /home/zookeepr/config)
-    ```
-    sudo -u zookeepr
-    mkdir /home/zookeepr/config
-    ch /home/zookeepr/config
-    git clone $_some_secret_repo
-    ln -s /home/zookeepr/config/lca_info.py /home/zookeepr/zookeepr/zkpylons/config/lca_info.py
-    ln -s /home/zookeepr/config/development.ini /home/zookeepr/zookeepr/development.ini
-    ```
-
-5. Prepare Zookeepr to run
-    ```
-    sudo -u zookeepr
-    python setup.py develop
-    git cherry-pick 7631b73ea4c6df7d219ba1758a72ea779664e8b6
-    alembic --config development.ini upgrade head
-    git reset --hard HEAD^
-    ```
-
+The folders are then used as follows:
+ - log contains the apache logs, and should belong to root/www-data/apache user
+ - zookeepr contains the Zookeepr code, potentially from your conferences fork/branch. This should belong to your instance's user (e.g. zkconf-zookeepr-prod)
+ - zookeepr-config contains your Zookeepr config from your private repo. This should belong to your instance's user (e.g. zkconf-zookeepr-prod)
