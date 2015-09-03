@@ -4,7 +4,7 @@
 <p class="label"><span class="mandatory">*</span><label for="person.lastname">Your last name:</label></p>
 <p class="entries">${ h.text('person.lastname', size=40) }</p>
 
-${ h.hidden('person.company', value='') }</p>
+${ h.hidden('person.company', value='') }
 
 % if c.form is not 'edit' or h.auth.authorized(h.auth.has_organiser_role):
 <p class="label"><span class="mandatory">*</span><label for="person.email_address">Email address:</label></p>
@@ -25,7 +25,7 @@ If you wish to change your email address please contact the organisers.
 <p class="entries">${ h.password("person.password_confirm", size=40) }</p>
 % endif
 
-%if h.lca_rego['personal_info']['phone'] == 'yes':
+%if c.config.get('personal_info', category='rego')['phone'] == 'yes':
 <p class="label"><label for="person.phone">Phone number:</label></p>
 <p class="entries">${ h.text('person.phone') }</p>
 
@@ -41,7 +41,7 @@ ${ h.hidden('person.phone') }
 ${ h.hidden('person.mobile') }
 %endif
 
-%if h.lca_rego['personal_info']['home_address'] == 'yes':
+%if c.config.get('personal_info', category='rego')['home_address'] == 'yes':
 <p class="label"><span class="mandatory">*</span><label for="person.address">Address:</label></p>
 <p class="entries">
 ${ h.text('person.address1', size=40) }

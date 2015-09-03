@@ -9,7 +9,7 @@ from formencode import validators, htmlfill, ForEach
 from formencode.variabledecode import NestedVariables
 
 from zkpylons.lib.base import BaseController, render
-from zkpylons.lib.validators import BaseSchema, PersonValidator, ProposalValidator, FileUploadValidator, PersonSchema, ProposalTypeValidator, TargetAudienceValidator, ProposalStatusValidator, AccommodationAssistanceTypeValidator, TravelAssistanceTypeValidator, ExistingPersonValidator
+from zkpylons.lib.validators import BaseSchema, PersonValidator, ProposalValidator, FileUploadValidator, PersonSchema, ProposalTypeValidator, TargetAudienceValidator, ProposalStatusValidator, AccommodationAssistanceTypeValidator, TravelAssistanceTypeValidator
 import zkpylons.lib.helpers as h
 
 from authkit.authorize.pylons_adaptors import authorize
@@ -19,20 +19,11 @@ from zkpylons.lib.mail import email
 
 from zkpylons.model import meta
 from zkpylons.model import Proposal, ProposalType, ProposalStatus, TargetAudience, Attachment, Stream, Review, Role, AccommodationAssistanceType, TravelAssistanceType, Person
+from zkpylons.model.config import Config
 
 from zkpylons.lib.validators import ReviewSchema
 
-from zkpylons.config.lca_info import lca_info
-
 log = logging.getLogger(__name__)
-
-class NewPersonSchema(BaseSchema):
-    allow_extra_fields = False
-
-    experience = validators.String(not_empty=True)
-    bio = validators.String(not_empty=True)
-    url = validators.URL(add_http=True, check_exists=False, not_empty=False)
-    phone = validators.String(not_empty=True)
 
 class ExistingPersonSchema(BaseSchema):
     allow_extra_fields = False
@@ -40,7 +31,7 @@ class ExistingPersonSchema(BaseSchema):
     experience = validators.String(not_empty=True)
     bio = validators.String(not_empty=True)
     url = validators.URL(add_http=True, check_exists=False, not_empty=False)
-    phone = validators.String(not_empty=True)
+    mobile = validators.String(not_empty=True)
 
 class ProposalSchema(BaseSchema):
     allow_extra_fields = False
@@ -60,7 +51,7 @@ class ProposalSchema(BaseSchema):
     slides_release = validators.Bool()
 
 class NewProposalSchema(BaseSchema):
-    person = NewPersonSchema()
+    person = ExistingPersonSchema()
     proposal = ProposalSchema()
     attachment = FileUploadValidator()
     pre_validators = [NestedVariables]
@@ -68,8 +59,9 @@ class NewProposalSchema(BaseSchema):
 class ExistingProposalSchema(BaseSchema):
     person = ExistingPersonSchema()
     proposal = ProposalSchema()
+    attachment = FileUploadValidator()
     pre_validators = [NestedVariables]
-    #person_to_edit = ExistingPersonValidator()
+    person_to_edit = PersonValidator()
 
 class NewEditReviewSchema(BaseSchema):
     pre_validators = [NestedVariables]
@@ -86,11 +78,11 @@ class ApproveSchema(BaseSchema):
 class ProposalController(BaseController):
 
     def __init__(self, *args):
-        c.cfp_status = lca_info['cfp_status']
-        c.cfmini_status = lca_info['cfmini_status']
-        c.proposal_editing = lca_info['proposal_editing']
-        c.cfp_hide_assistance_info = lca_info['cfp_hide_assistance_info']
-        c.cfp_hide_scores = lca_info['cfp_hide_scores']
+        c.cfp_status               = Config.get('cfp_status')
+        c.cfmini_status            = Config.get('cfmini_status')
+        c.proposal_editing         = Config.get('proposal_editing')
+        c.cfp_hide_assistance_info = Config.get('cfp_hide_assistance_info')
+        c.cfp_hide_scores          = Config.get('cfp_hide_scores')
 
     @authorize(h.auth.is_valid_user)
     @authorize(h.auth.is_activated_user)
@@ -117,14 +109,14 @@ class ProposalController(BaseController):
             'proposal.slides_release': 1,
             'proposal.travel_assistance' : 1,
             'proposal.accommodation_assistance' : 1,
-            'person.name': c.person.firstname + " " + c.person.lastname,
+            'person.name': c.person.fullname,
             'person.phone': c.person.phone,
             'person.experience': c.person.experience,
             'person.bio': c.person.bio,
             'person.url': c.person.url,
         }
         defaults['person_to_edit'] = c.person.id
-        defaults['name'] = c.person.firstname + " " + c.person.lastname
+        defaults['name'] = c.person.fullname
         form = render("proposal/new.mako")
         return htmlfill.render(form, defaults)
 
@@ -287,7 +279,7 @@ class ProposalController(BaseController):
 
         defaults = h.object_to_defaults(c.proposal, 'proposal')
         defaults.update(h.object_to_defaults(c.person, 'person'))
-        defaults['person.name'] = c.person.firstname + " " + c.person.lastname
+        defaults['person.name'] = c.person.fullname
         # This is horrible, don't know a better way to do it
         if c.proposal.type:
             defaults['proposal.type'] = defaults['proposal.proposal_type_id']
@@ -299,7 +291,7 @@ class ProposalController(BaseController):
             defaults['proposal.audience'] = defaults['proposal.target_audience_id']
 
         defaults['person_to_edit'] = c.person.id
-        defaults['name'] = c.person.firstname + " " + c.person.lastname
+        defaults['name'] = c.person.fullname
         c.miniconf = (c.proposal.type.name == 'Miniconf')
         form = render('/proposal/edit.mako')
         return htmlfill.render(form, defaults)
@@ -324,25 +316,22 @@ class ProposalController(BaseController):
 
         c.proposal.abstract = self.clean_abstract(c.proposal.abstract)
 
-        c.person = c.proposal.people[0]
-        for person in c.proposal.people:
-            if h.signed_in_person() == person:
-                c.person = person
-
-        if (c.person.id == h.signed_in_person().id or h.auth.authorized(h.auth.has_organiser_role)):
+        c.person = self.form_result['person_to_edit']
+        if (c.person.id == h.signed_in_person().id or
+                             h.auth.authorized(h.auth.has_organiser_role)):
             for key in self.form_result['person']:
                 setattr(c.person, key, self.form_result['person'][key])
-            p_edit = "and author "
+            p_edit = "and author"
         else:
-            p_edit = ""
+            p_edit = "(but not author)"
 
         meta.Session.commit()
 
-        if lca_info['proposal_update_email'] != '':
-            body = "Subject: %s Proposal Updated\n\nID:    %d\nTitle: %s\nType:  %s\nURL:   %s" % (h.lca_info['event_name'], c.proposal.id, c.proposal.title, c.proposal.type.name.lower(), "http://" + h.host_name() + h.url_for(action="view"))
-            email(lca_info['proposal_update_email'], body)
+        if Config.get('proposal_update_email') != '':
+            body = "Subject: %s Proposal Updated\n\nID:    %d\nTitle: %s\nType:  %s\nURL:   %s" % (Config.get('event_name'), c.proposal.id, c.proposal.title, c.proposal.type.name.lower(), "http://" + Config.get('event_host') + h.url_for(action="view"))
+            email(Config.get('proposal_update_email'), body)
 
-        h.flash("Proposal %sedited!" % p_edit)
+        h.flash("Proposal %s edited!"%p_edit)
         return redirect_to('/proposal')
 
     @authorize(h.auth.has_reviewer_role)
