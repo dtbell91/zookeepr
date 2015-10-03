@@ -1,9 +1,7 @@
-      <p>${ c.config.get('event_shortname') } is a grass-roots conference and needs enthusiastic people like you to make it a success! This is a great opportunity to be seen by your peers and give back to the community.</p>
-
-      <p>Volunteers will be expected to attend a training course which will walk them thru tasks such as operating cameras, registering people, etc. Training courses will be held in mid-December, mid-January, and on the weekend before the conference.</p>
-
-      <p>Please use the check-boxes below to indicate your category, your availability, and areas that you are able to assist with. Please use the "Other:" and "Experience:" text boxes to let us know about any restrictions on your time or special skills you have that might help at the conference.</p>
-
+        <p>linux.conf.au is a grass-roots conference and needs enthusiastic people like you to make it a success! This is a great opportunity to be seen by your peers and give back to the open source community.</p>
+        <p>As a volunteer, you will be expected to attend a training course which will walk you through tasks such as operating cameras, registering people, etc. Training courses will be held in mid-January, and on the weekend before the conference.</p>
+        <p>Please use the check-boxes below to indicate your category, your availability, and areas that you are able to assist with. Please use the "Other:" and "Experience:" text boxes to let us know about any restrictions on your time or special skills you have that might help at the conference.</p>
+        <p>We thank you in advance for your enthusiasm and commitment to making linux.conf.au 2016 Geelong - LCA By the Bay - the best LCA ever!</p>
 
 % for category in c.config.get('volunteer', category='rego'):
         <h3>${ category['title'] }</h3>
