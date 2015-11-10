@@ -32,9 +32,7 @@ from zkpylons.model.time_slot import TimeSlot, TimeSlotValidator
 from zkpylons.model.location import Location, LocationValidator
 from zkpylons.model.event import Event, EventValidator
 from zkpylons.model.event_type import EventType
-
-from zkpylons.config.lca_info import lca_info
-from zkpylons.config.zkpylons_config import file_paths
+from zkpylons.model.config import Config
 
 import os
 
@@ -135,8 +133,9 @@ class ScheduleController(BaseController):
         for schedule in c.schedule_collection:
             if not schedule.time_slot.heading:
                 event = ical.add('vevent')
-                event.add('uid').value = str(schedule.id) + '@' + h.lca_info['event_host']
+                event.add('uid').value = str(schedule.id) + '@' + Config.get('event_host')
                 # Created
+                tz = timezone(Config.get('time_zone'))
                 event.add('created').value = schedule.creation_timestamp.replace(tzinfo=tz)
                 # Last Modified
                 event.add('dtstamp').value = schedule.last_modification_timestamp.replace(tzinfo=tz)
@@ -296,6 +295,6 @@ class ScheduleController(BaseController):
             c.talk = Proposal.find_accepted_by_id(id)
         except:
             c.talk_id = id
-            c.webmaster_email = lca_info['webmaster_email']
+            c.webmaster_email = Config.get('webmaster_email')
             return render('/schedule/invalid_talkid.mako')
         return render('/schedule/table_view.mako')

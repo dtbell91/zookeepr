@@ -20,7 +20,7 @@ import re
 import array
 %>
 
-<p class="note">${ h.lca_info['event_pricing_disclaimer'] }</p>
+<p class="note">${ c.config.get('event_pricing_disclaimer') }</p>
 
         <fieldset id="personal">
           <h2>Personal Information</h2>
@@ -49,21 +49,21 @@ import array
 % endif
           </p>
 
-%if h.lca_rego['personal_info']['home_address'] == 'yes':
-          <p class="label"><span class="mandatory">*</span><label for="person.address">Address:</label></p>
+%if c.config.get('personal_info', category='rego')['home_address'] == 'yes':
+          <p class="label"><span class="mandatory">*</span><label for="personaddress1">Address:</label></p>
           <p class="entries">
             ${ h.text('person.address1', size=40) }
             <br>
             ${ h.text('person.address2', size=40) }
           </p>
 
-          <p class="label"><span class="mandatory">*</span><label for="person.city">City/Suburb:</label></p>
+          <p class="label"><span class="mandatory">*</span><label for="personcity">City/Suburb:</label></p>
           <p class="entries">${ h.text('person.city', size=40) }</p>
 
-          <p class="label"><label for="person.state">State/Province:</label></p>
+          <p class="label"><label for="personstate">State/Province:</label></p>
           <p class="entries">${ h.text('person.state', size=40) }</p>
 
-          <p class="label"><span class="mandatory">*</span><label for="person.postcode">Postcode/ZIP:</label></p>
+          <p class="label"><span class="mandatory">*</span><label for="personpostcode">Postcode/ZIP:</label></p>
           <p class="entries">${ h.text('person.postcode', size=40) }</p>
 %else:
 ${ h.hidden('person.address1') }
@@ -73,9 +73,9 @@ ${ h.hidden('person.state') }
 ${ h.hidden('person.postcode') }
 %endif
 
-          <p class="label"><span class="mandatory">*</span><label for="person.country">Country:</label></p>
+          <p class="label"><span class="mandatory">*</span><label for="personcountry">Country:</label></p>
           <p class="entries">
-            <select name="person.country">
+            <select id="personcountry" name="person.country">
 % for country in h.countries():
               <option value="${country}">${ country }</option>
 % endfor
@@ -86,15 +86,15 @@ ${ h.hidden('person.postcode') }
   is_speaker = c.signed_in_person.is_speaker()
 %>
 
-%if h.lca_rego['personal_info']['phone'] == 'yes':
-          <p class="label"><label for="person.mobile">Phone number (International Format):</label></p>
+%if c.config.get('personal_info', category='rego')['phone'] == 'yes':
+          <p class="label"><label for="personphone">Phone number (International Format):</label></p>
           <p class="entries">${ h.text('person.phone') }</p>
 
           <p class="label">
 % if is_speaker:
             <span class="mandatory">*</span>
 % endif
-            <label for="person.mobile">Mobile/Cell number (International Format):</label>
+            <label for="personmobile">Mobile/Cell number (International Format):</label>
           </p>
           <p class="entries">${ h.text('person.mobile') }</p>
 %else:
@@ -102,7 +102,7 @@ ${ h.hidden('person.phone') }
 ${ h.hidden('person.mobile') }
 %endif
 
-          <p class="label"><label for="person.company">Company:</label></p>
+          <p class="label"><label for="personcompany">Company:</label></p>
           <p class="entries">${ h.text('person.company', size=60) }</p>
 
         </fieldset>
@@ -110,7 +110,7 @@ ${ h.hidden('person.mobile') }
         <fieldset id="voucher">
           <h2>Voucher</h2>
 
-          <p class="label"><label for="registration.voucher_code">Voucher code:</label></p>
+          <p class="label"><label for="registrationvoucher_code">Voucher code:</label></p>
           <p class="entries">${ h.text('registration.voucher_code', size=15) }</p>
           <p class="note">If you have been provided with a voucher code, please enter it here.</p>
 
@@ -298,13 +298,15 @@ accommdisplay();
     <th>${ product.description }<br />${ soldout | n}(${ h.integer_to_currency(product.cost) })</th>
 %           endfor
   </tr>
+  <tr>
 %           for product in products:
 %             if category.display == 'qty':
-    <td align="center">${ h.text('products.product_' + product.clean_description(True) + '_qty', size=2) }</td>
+    <td style="text-align:center">${ h.text('products.product_' + product.clean_description(True) + '_qty', size=2) }</td>
 %             elif category.display == 'checkbox':
-    <td align="center">${ h.checkbox('products.product_' + product.clean_description(True) + '_checkbox') }</td>
+    <td style="text-align:center">${ h.checkbox('products.product_' + product.clean_description(True) + '_checkbox') }</td>
 %             endif
 %           endfor
+</tr>
 </table>
 %       elif category.display == 'radio':
          <p class="entries">
@@ -334,7 +336,6 @@ accommdisplay();
 %              endif
 %         endfor
           </ul>
-          </p>
 %       elif category.display == 'select':
 %         if category.name == 'Accommodation' and (len(category.products) == 0 or (len(category.products) == 1 and category.products[0].cost == 0)):
             <input type="hidden" name="products.category_${ category.clean_name() }">
@@ -386,13 +387,13 @@ accommdisplay();
 
 %         endif
 %       elif category.name == "Partners' Programme":
-          <p class="label"><span class="mandatory">#</span><label for="registration.partner_name">Your partner's name:</label></p>
+          <p class="label"><span class="mandatory">#</span><label for="productspartner_name">Your partner's name:</label></p>
           <p class="entries">${ h.text('products.partner_name', size=50) }</p>
           <p class="note">#If your partner will be participating in the programme, then this field is required so that our Partners Programme manager can contact them.</p>
-          <p class="label"><span class="mandatory">#</span><label for="registration.partner_email">Your partner's email address:</label></p>
+          <p class="label"><span class="mandatory">#</span><label for="productspartner_email">Your partner's email address:</label></p>
           <p class="entries">${ h.text('products.partner_email', size=50) }</p>
           <p class="note">#If your partner will be participating in the programme, then this field is required so that our Partners Programme manager can contact them.</p>
-          <p class="label"><span class="mandatory">#</span><label for="registration.partner_mobile">enter number in international format. If you don't know the number, type "unknown".:</label></p>
+          <p class="label"><span class="mandatory">#</span><label for="productspartner_mobile">enter number in international format. If you don't know the number, type "unknown".:</label></p>
           <p class="entries">${ h.text('products.partner_mobile', size=50) }</p>
           <p class="note">A Partners Programme shirt is included with every adult partner ticket. Please indicate the appropriate number and sizes in the T-Shirt Section (above).</p>
 %       endif
@@ -406,36 +407,35 @@ accommdisplay();
         <fieldset>
           <h2>Further Information</h2>
 
-          <p class="label"><span class="mandatory">*</span> <label for="registration.over18">Are you over 18?</label></p>
+          <p class="label"><span class="mandatory">*</span> <label>Are you over 18?</label></p>
           <p class="entries">
             ${ h.radio('registration.over18', 1, label='Yes') }<br />
             ${ h.radio('registration.over18', 0, label='No') } <br />
            </p>
           <p class="note">Being under 18 will not stop you from registering. We need to know whether you are over 18 to allow us to cater for you at venues that serve alcohol.</p>
 
-          <p class="label"><label for="registration.diet">Dietary requirements:</label></p>
+          <p class="label"><label for="registrationdiet">Dietary requirements:</label></p>
           <p class="entries">${ h.text('registration.diet', size=60) }</p>
 
-          <p class="label"><label for="registration.special">Other special requirements:</label></p>
+          <p class="label"><label for="registrationspecial">Other special requirements:</label></p>
           <p class="entries">${ h.text('registration.special', size=60) }</p>
           <p class="note">Please enter any requirements if necessary; access requirements, etc.</p>
-% if h.lca_rego['ask_past_confs']:
-             <p class="label"><label for="registration.prevlca">Have you attended ${ h.lca_info['event_generic_name'] } before?</label></p>
+% if c.config.get('ask_past_confs', category='rego'):
+             <p class="label"><label>Have you attended ${ c.config.get('event_generic_name') } before?</label></p>
             <p class="entries">
             <table>
               <tr>
                 <td>
-%     for (year, desc) in h.lca_rego['past_confs']:
+%     for (year, desc) in c.config.get('past_confs', category='rego'):
        <% label = 'registration.prevlca.%s' % year %>
                 <label>${ h.checkbox(label) } ${ desc }</label><br />
 %     endfor
                 </td>
               </tr>
             </table>
-            </p>
 % endif
           </fieldset>
-% if h.lca_rego['lca_optional_stuff'] == 'yes':
+% if c.config.get('lca_optional_stuff', category='rego') == 'yes':
           <fieldset>
               <h2>Optional</h2>
 <script src="/silly.js"></script>
@@ -451,99 +451,99 @@ accommdisplay();
             <p class="entries">
               <select id="registration.shell" name="registration.shell" onchange="toggle_select_hidden(this.id, 'shell_other')">
                 <option value="">(please select)</option>
-% for s in h.lca_rego['shells']:
+% for s in c.config.get('shells', category='rego'):
                 <option value="${s}">${ s }</option>
 % endfor
                 <option value="other">other</option>
               </select>
             </p>
 
-% if not c.registration or c.registration.shell in h.lca_rego['shells'] or c.registration.shell == '':
-<span id="shell_other" style="display: none">
+% if not c.registration or c.registration.shell in c.config.get('shells', category='rego') or c.registration.shell == '':
+<p id="shell_other" class="entries" style="display: none">
 % else:
-<span id="shell_other" style="display: inline">
+<p id="shell_other" class="entries" style="display: inline">
 % endif
-  <p class="entries">${ h.text('registration.shelltext', size=12) }</entries></p>
-</span>
+  ${ h.text('registration.shelltext', size=12) }
+  </p>
   </td>
 
   <td>
             <p class="entries">
               <select id="registration.editor" name="registration.editor" onchange="toggle_select_hidden(this.id, 'editor_other')">
                 <option value="">(please select)</option>
-% for e in h.lca_rego['editors']:
+% for e in c.config.get('editors', category='rego'):
                 <option value="${ e }">${ e }</option>
 % endfor
                 <option value="other">other</option>
               </select>
             </p>
 
-% if not c.registration or c.registration.editor in h.lca_rego['editors'] or c.registration.editor == '':
-<span id="editor_other" style="display: none">
+% if not c.registration or c.registration.editor in c.config.get('editors', category='rego') or c.registration.editor == '':
+<p id="editor_other" class="entries" style="display: none">
 % else:
-<span id="editor_other" style="display: inline">
+<p id="editor_other" class="entries" style="display: inline">
 % endif
-  <p class="entries">${ h.text('registration.editortext', size=12) }</entries></p>
-</span>
+  ${ h.text('registration.editortext', size=12) }
+</p>
   </td>
 
   <td>
             <p class="entries">
               <select id="registration.distro" name="registration.distro" onchange="toggle_select_hidden(this.id, 'distro_other')">
                 <option value="">(please select)</option>
-% for d in h.lca_rego['distros']:
+% for d in c.config.get('distros', category='rego'):
                 <option value="${ d }">${ d }</option>
 % endfor
                 <option value="other">other</option>
               </select>
             </p>
 
-% if not c.registration or c.registration.distro in h.lca_rego['distros'] or c.registration.distro == '':
-<span id="distro_other" style="display: none">
+% if not c.registration or c.registration.distro in c.config.get('distros', category='rego') or c.registration.distro == '':
+<p id="distro_other" class="entries" style="display: none">
 % else:
-<span id="distro_other" style="display: inline">
+<p id="distro_other" class="entries" style="display: inline">
 % endif
-  <p class="entries">${ h.text('registration.distrotext', size=12) }</entries></p>
-</span>
+  ${ h.text('registration.distrotext', size=12) }
+</p>
   </td>
   <td>
             <p class="entries">
               <select id="registration.vcs" name="registration.vcs" onchange="toggle_select_hidden(this.id, 'vcs_other')">
                 <option value="">(please select)</option>
-% for s in h.lca_rego['vcses']:
+% for s in c.config.get('vcses', category='rego'):
                 <option value="${s}">${ s }</option>
 % endfor
                 <option value="other">other</option>
               </select>
             </p>
 
-% if not c.registration or c.registration.vcs in h.lca_rego['vcses'] or c.registration.vcs == '':
-<span id="vcs_other" style="display: none">
+% if not c.registration or c.registration.vcs in c.config.get('vcses', category='rego') or c.registration.vcs == '':
+<p id="vcs_other" class="entries" style="display: none">
 % else:
-<span id="vcs_other" style="display: inline">
+<p id="vcs_other" class="entries" style="display: inline">
 % endif
-  <p class="entries">${ h.text('registration.vcstext', size=12) }</entries></p>
-</span>
+  ${ h.text('registration.vcstext', size=12) }
+</p>
   </td>
 </tr>
 </table>
 
-            <p class="label"><label for="registration.nick">Superhero name:</label></p>
+            <p class="label"><label for="registrationnick">Superhero name:</label></p>
             <p class="entries">${ h.text('registration.nick', size=30) }</p>
             <p class="note">Your IRC nick or other handle you go by.</p>
 
-% if h.lca_rego['pgp_collection'] != 'no':
-            <p class="label"><label for="registration.keyid">GnuPG/PGP Keyid:</label></p>
+% if c.config.get('pgp_collection', category='rego') != 'no':
+            <p class="label"><label for="registrationkeyid">GnuPG/PGP Keyid:</label></p>
             <p class="entries">${ h.text('registration.keyid', size=10) }</p>
             <p class="note">If you have a GnuPG or PGP key then please enter its short key id here and we will print it on your badge.</p>
 % endif
 
-            <p class="label"><label for="registration.planetfeed">Planet Feed:</label></p>
+            <p class="label"><label for="registrationplanetfeed">Planet Feed:</label></p>
             <p class="entries">${ h.text('registration.planetfeed', size=50) }</p>
-            <p class="note">If you have a blog and would like it included in the ${ h.event_name() } planet, please specify an <b>${ h.event_name() } specific feed</b> to be included. (This is the URL of the RSS feed.)</p>
+            <p class="note">If you have a blog and would like it included in the ${ c.config.get('event_name') } planet, please specify an <b>${ c.config.get('event_name') } specific feed</b> to be included. (This is the URL of the RSS feed.)</p>
 
-            <p class="label"><label for="registration.silly_description">Description:</label>
-            <blockquote class="entries">${ c.silly_description }</blockquote></p>
+            <p class="label"><label>Description:</label>
+            <blockquote class="entries">${ c.silly_description }</blockquote>
             ${ h.hidden('registration.silly_description') }
             ${ h.hidden('registration.silly_description_checksum') }
             <p class="note">This is a randomly chosen description for your name badge</p>
@@ -558,11 +558,10 @@ accommdisplay();
             <ul class="entries">
               <li> <label>${ h.checkbox('registration.signup.linuxaustralia') } membership with Linux Australia</label> <a href="http://www.linux.org.au/" target="_blank">(read more)</a>
 
-              <li> <label>${ h.checkbox('registration.signup.announce') } the low traffic <b>${ h.event_name() }  announcement list</b></label>
+              <li> <label>${ h.checkbox('registration.signup.announce') } the low traffic <b>${ c.config.get('event_name') }  announcement list</b></label>
 
-              <li> <label>${ h.checkbox('registration.signup.chat') } the <b>${ h.event_name() } attendees list</b></label>
+              <li> <label>${ h.checkbox('registration.signup.chat') } the <b>${ c.config.get('event_name') } attendees list</b></label>
             </ul>
-            </p>
           </fieldset>
 
 % if is_speaker:

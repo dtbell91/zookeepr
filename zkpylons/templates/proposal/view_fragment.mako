@@ -98,8 +98,8 @@ ${ person.firstname | h } ${ person.lastname | h } &lt;${ person.email_address }
 %endif
 <br>
 ${ h.link_to('(view details)', url=h.url_for(controller='person', action='view', id=person.id)) }
-${ h.link_to('(stalk on Google)', url='http://google.com/search?q=%s+%s' % (person.firstname + " " + person.lastname, person.email_address)) }
-${ h.link_to('(linux specific stalk)', url='http://google.com/linux?q=%s+%s' % (person.firstname + " " + person.lastname, person.email_address)) }
+${ h.link_to('(stalk on Google)', url='http://google.com/search?q=%s+%s' % (person.fullname, person.email_address)) }
+${ h.link_to('(linux specific stalk)', url='http://google.com/linux?q=%s+%s' % (person.fullname, person.email_address)) }
 ${ h.link_to('(email address only stalk)', url='http://google.com/search?q=%s' % person.email_address) }
 </p>
 %   endif
@@ -191,18 +191,18 @@ ${ h.link_to('Add an attachment', url=h.url_for(action='attach')) }
 % endif
 
 <p><em>Consents:</em><blockquote>
-<p>I allow ${ h.lca_info["event_parent_organisation"] } to record my talk.</p>
+<p>I allow ${ c.config.get("event_parent_organisation") } to record my talk.</p>
 
-<p>${ allow(c.proposal.video_release) } ${ h.lca_info["event_parent_organisation"] } to release any
-recordings of my presentations, tutorials and minconfs under the <a href="${ h.lca_info["media_license_url"] }">${ h.lca_info["media_license_name"] }</a></p>
+<p>${ allow(c.proposal.video_release) } ${ c.config.get("event_parent_organisation") } to release any
+recordings of my presentations, tutorials and minconfs under the <a href="${ c.config.get("media_license_url") }">${ c.config.get("media_license_name") }</a></p>
 
-<p>${ allow(c.proposal.slides_release) } ${ h.lca_info["event_parent_organisation"] } to release any other material (such as slides) from my presentations, tutorials and minconfs under the <a href="${ h.lca_info["media_license_url"] }">${ h.lca_info["media_license_name"] }</a>
+<p>${ allow(c.proposal.slides_release) } ${ c.config.get("event_parent_organisation") } to release any other material (such as slides) from my presentations, tutorials and minconfs under the <a href="${ c.config.get("media_license_url") }">${ c.config.get("media_license_name") }</a>
 </p>
 
 
 % if c.proposal.video_release or c.proposal.slides_release:
 <p>I confirm that I have the authority to allow
-${ h.lca_info["event_parent_organisation"] } to release the above material.
+${ c.config.get("event_parent_organisation") } to release the above material.
 i.e., if your talk includes any information about your employer, or another
 persons copyrighted material, that person has given you authority to
 release this information.</p>

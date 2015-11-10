@@ -3,7 +3,7 @@
         <p>Please use the check-boxes below to indicate your category, your availability, and areas that you are able to assist with. Please use the "Other:" and "Experience:" text boxes to let us know about any restrictions on your time or special skills you have that might help at the conference.</p>
         <p>We thank you in advance for your enthusiasm and commitment to making linux.conf.au 2016 Geelong - LCA By the Bay - the best LCA ever!</p>
 
-% for category in h.lca_rego['volunteer']:
+% for category in c.config.get('volunteer', category='rego'):
         <h3>${ category['title'] }</h3>
 %   for area in category['questions']:
 <%    code = area['name'].replace(' ', '_').replace('.', '_') %>
@@ -25,7 +25,7 @@
           <div class="textarea">
             <label for="volunteer.other" class="col-sm-2 control-label">Other</label>
             <div class="input-group col-sm-10">
-              <textarea class="form-control" id="proposalabstract" placeholder="Please provide any other relevant information such as your areas of interest, arrival and departure dates (if you're not local), your availability during linux.conf.au 2016, and any special requirements (dietary or otherwise)." name="volunteer.other" rows="10" cols="80"></textarea>
+              <textarea class="form-control" id="proposalabstract" placeholder="Please provide any other relevant information such as your areas of interest, arrival and departure dates (if you're not local), your availability during ${ c.config.get('event_shortname') }, and any special requirements (dietary or otherwise)." name="volunteer.other" rows="10" cols="80"></textarea>
             </div>
           </div>
         </div>
